@@ -1,35 +1,7 @@
-export class ApiProject {
-  constructor() {}
-
-  getProject(key: string): Project {
-    const response: Project = JSON.parse(localStorage.getItem(key) || "");
-    return response;
-  }
-
-  createProject(project: Project): boolean {
-    localStorage.setItem(project.uuid, JSON.stringify(project));
-    return true;
-  }
-
-  removeProject(key: string): boolean {
-    localStorage.removeItem(key);
-    return true;
-  }
-
-  editProject(project: Project): boolean {
-    localStorage.setItem(project.uuid, JSON.stringify(project));
-    return true;
-  }
-}
-
-export class Project {
-  uuid: string;
-  name: string;
-  description: string;
-
-  constructor(name: string, description: string) {
-    this.uuid = self.crypto.randomUUID();
-    this.name = name;
-    this.description = description;
-  }
+export interface Api<T> {
+  get(uuid: string): T;
+  getAll(): T[];
+  create(data: T): void;
+  update(data: T): void;
+  delete(uuid: string): void;
 }
