@@ -1,5 +1,4 @@
 import { Api } from "./api";
-import { Project } from "./projectsApi";
 
 export class Story {
   public readonly uuid: string;
