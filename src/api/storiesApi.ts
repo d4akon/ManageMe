@@ -6,26 +6,26 @@ export class Story {
   public name: string;
   public description: string;
   public priority: Priority;
-  public projectUuid: string;
-  public readonly dateOfCreation: Date;
   public status: Status;
+  public readonly dateOfCreation: Date;
+  public projectUuid: string;
   public ownerUuid: string;
 
   constructor(
     name: string,
     description: string,
     priority: Priority,
-    projectUuid: string,
     status: Status,
+    projectUuid: string,
     ownerUuid: string
   ) {
     this.uuid = crypto.randomUUID();
     this.name = name;
     this.description = description;
     this.priority = priority;
-    this.projectUuid = projectUuid;
-    this.dateOfCreation = new Date();
     this.status = status;
+    this.dateOfCreation = new Date();
+    this.projectUuid = projectUuid;
     this.ownerUuid = ownerUuid;
   }
 }

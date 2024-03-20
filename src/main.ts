@@ -11,8 +11,8 @@ const story = new Story(
   "Add new feature",
   "New feature desc",
   Priority.High,
-  project.uuid,
   Status.ToDo,
+  project.uuid,
   user.uuid
 );
 
