@@ -6,7 +6,7 @@ const projectApi = new ProjectsApi();
 const storiesApi = new StoriesApi();
 const usersApi = new UsersApi();
 const project = new Project("Test project", "Description for new project");
-const user = new User("Szymon", "Test");
+const user = new User("Szymon", "Test", "Test password");
 const story = new Story(
   "Add new feature",
   "New feature desc",

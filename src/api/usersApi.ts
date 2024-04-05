@@ -4,11 +4,13 @@ export class User {
   public readonly uuid: string;
   public name: string;
   public surname: string;
+  public password: string;
 
-  constructor(name: string, surname: string) {
+  constructor(name: string, surname: string, password: string) {
     this.uuid = crypto.randomUUID();
     this.name = name;
     this.surname = surname;
+    this.password = password;
   }
 }
 
