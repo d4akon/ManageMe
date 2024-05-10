@@ -71,23 +71,8 @@ async function renderTasks() {
   renderTaskList(doingTasks, "doing-tasks");
   renderTaskList(doneTasks, "done-tasks");
 
-  const storySelect = document.getElementById("storyUuid") as HTMLSelectElement;
-  stories.forEach((story) => {
-    const option = document.createElement("option");
-    option.value = story.uuid;
-    option.textContent = story.name;
-    storySelect.appendChild(option);
-  });
-
-  const userSelect = document.getElementById(
-    "assignedUserUuid"
-  ) as HTMLSelectElement;
-  users.forEach((user) => {
-    const option = document.createElement("option");
-    option.value = user.uuid;
-    option.textContent = `${user.name} ${user.surname}`;
-    userSelect.appendChild(option);
-  });
+  renderDropdownOptions(stories, "storyUuid");
+  renderDropdownOptions(users, "assignedUserUuid");
 }
 
 function renderTaskList(tasks: Task[], containerId: string) {
@@ -104,6 +89,17 @@ function renderTaskList(tasks: Task[], containerId: string) {
       <p>${task.description}</p>
       <button class="view-details-btn" data-task-id="${task.uuid}">View Details</button>`;
     container.appendChild(taskElement);
+  });
+}
+
+function renderDropdownOptions(items: any[], selectId: string) {
+  const select = document.getElementById(selectId) as HTMLSelectElement;
+  items.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = item.uuid;
+    option.textContent =
+      item instanceof Story ? item.name : `${item.name} ${item.surname}`;
+    select.appendChild(option);
   });
 }
 
@@ -135,12 +131,9 @@ async function openTaskFormModal() {
 
   modal.style.display = "block";
 
-  const closeButton = modal.querySelector(".close");
-  if (closeButton) {
-    closeButton.addEventListener("click", () => {
-      modal.style.display = "none";
-    });
-  }
+  modal.querySelector(".close")?.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
 }
 
 async function handleTaskFormSubmit(event: Event) {
@@ -155,10 +148,9 @@ async function handleTaskFormSubmit(event: Event) {
   const storyUuid = formData.get("storyUuid") as string;
   const assignedUserUuid = formData.get("assignedUserUuid") as string;
 
-  // Ustaw datę startu na bieżący czas
   const dateOfStart = new Date();
-  const dateOfFinish = null; // Ustaw datę końca na null
-  const status = Status.ToDo; // Ustaw status na "To Do"
+  const dateOfFinish = null;
+  const status = Status.ToDo;
 
   const newTask = new Task(
     name,
@@ -173,9 +165,8 @@ async function handleTaskFormSubmit(event: Event) {
   tasksApi.create(newTask);
 
   const modal = document.getElementById("task-form-modal");
-  if (modal) {
-    modal.style.display = "none";
-  }
+  if (modal) modal.style.display = "none";
+
   renderTasks();
 }
 
@@ -226,13 +217,11 @@ async function handleTaskAction(event: Event) {
 
   modal.style.display = "block";
 
-  const closeBtn = modal.querySelector("#close-modal-btn");
-  closeBtn?.addEventListener("click", () => {
+  modal.querySelector("#close-modal-btn")?.addEventListener("click", () => {
     modal.style.display = "none";
   });
 
-  const editTaskBtn = modal.querySelector("#edit-task-btn");
-  editTaskBtn?.addEventListener("click", () => {
+  modal.querySelector("#edit-task-btn")?.addEventListener("click", () => {
     handleEditTask(taskId);
   });
 }
@@ -253,15 +242,12 @@ async function handleEditTask(taskId: string | null) {
   const storyMap: Record<string, string> = {};
   stories.forEach((story) => (storyMap[story.uuid] = story.name));
 
-  // Pobierz formularz edycji zadania
   const editForm = getEditTaskForm(task, userMap, storyMap);
   const modalContent = document.querySelector(".modal-content");
   if (!modalContent) return;
 
-  // Usuń istniejący widok szczegółowy zadania i dodaj formularz edycji
   modalContent.innerHTML = editForm;
 
-  // Ustaw funkcję obsługi formularza
   const form = document.getElementById("edit-task-form") as HTMLFormElement;
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -291,15 +277,12 @@ document
     const storyMap: Record<string, string> = {};
     stories.forEach((story) => (storyMap[story.uuid] = story.name));
 
-    // Pobierz formularz edycji zadania
     const editForm = getEditTaskForm(task, userMap, storyMap);
     const modalContent = document.querySelector(".modal-content");
     if (!modalContent) return;
 
-    // Usuń istniejący widok szczegółowy zadania i dodaj formularz edycji
     modalContent.innerHTML = editForm;
 
-    // Ustaw funkcję obsługi formularza
     const form = document.getElementById("edit-task-form") as HTMLFormElement;
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -312,7 +295,6 @@ function getEditTaskForm(
   users: Record<string, string>,
   stories: Record<string, string>
 ): string {
-  // Zwróć formularz edycji zadania w formie HTML
   return `
       <h2>Edit Task</h2>
       <form id="edit-task-form">
@@ -399,7 +381,6 @@ async function handleEditTaskFormSubmit(taskId: string | null) {
   const status = parseInt(formData.get("status") as string);
   const assignedUserUuid = formData.get("assignedUserUuid") as string;
 
-  // Aktualizacja wszystkich informacji o zadaniu
   task.name = name;
   task.description = description;
   task.priority = priority;
@@ -407,12 +388,10 @@ async function handleEditTaskFormSubmit(taskId: string | null) {
   task.status = status;
   task.assignedUserUuid = assignedUserUuid;
 
-  // Jeżeli status zostanie zmieniony na "Doing", ustaw datę startu na bieżący czas
   if (task.status === Status.Doing) {
     task.dateOfStart = new Date();
   }
 
-  // Jeżeli status zostanie zmieniony na "Done", ustaw datę zakończenia na bieżący czas
   if (task.status === Status.Done) {
     task.dateOfFinish = new Date();
   }
@@ -422,9 +401,7 @@ async function handleEditTaskFormSubmit(taskId: string | null) {
   renderTasks();
 
   const modal = document.getElementById("task-details-modal");
-  if (modal) {
-    modal.style.display = "none";
-  }
+  if (modal) modal.style.display = "none";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
