@@ -1,7 +1,6 @@
-import { StoriesApi, Story } from "./api/storiesApi";
+import { StoriesApi } from "./api/storiesApi";
 import { Status, TasksApi, Task, Priority } from "./api/tasksApi";
-import { UsersApi, User, Role } from "./api/usersApi";
-import { ProjectsApi, Project } from "./api/projectsApi";
+import { UsersApi } from "./api/usersApi";
 import { seedData } from "./utils/seedData";
 import { renderDropdownOptions, renderTaskList } from "./components/taskList";
 
