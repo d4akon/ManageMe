@@ -5,13 +5,21 @@ export class User {
   public name: string;
   public surname: string;
   public password: string;
+  public role: Role;
 
-  constructor(name: string, surname: string, password: string) {
+  constructor(name: string, surname: string, password: string, role: Role) {
     this.uuid = crypto.randomUUID();
     this.name = name;
     this.surname = surname;
     this.password = password;
+    this.role = role;
   }
+}
+
+export enum Role {
+  Admin,
+  Devops,
+  Developer,
 }
 
 export class UsersApi implements Api<User> {
