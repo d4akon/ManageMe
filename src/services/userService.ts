@@ -1,4 +1,4 @@
-import { User } from "./api/usersApi";
+import { User } from "../api/usersApi";
 
 export class UserService {
   private static readonly USER_KEY = "loggedInUser";
