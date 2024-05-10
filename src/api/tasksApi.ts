@@ -56,7 +56,7 @@ export class TasksApi implements Api<Task> {
       try {
         return JSON.parse(tasksJSON);
       } catch (error) {
-        console.error("Error parsing stories from local storage:", error);
+        console.error("Error parsing tasks from local storage:", error);
         return [];
       }
     } else {
