@@ -8,9 +8,11 @@ import { renderDropdownOptions, renderTaskList } from "./components/taskList";
 const tasksApi = new TasksApi();
 const storiesApi = new StoriesApi();
 const usersApi = new UsersApi();
-const projectsApi = new ProjectsApi();
 
-seedData();
+if (localStorage.length <= 0) {
+  console.log(localStorage.length);
+  seedData();
+}
 
 async function renderTasks() {
   const tasks = tasksApi.getAll();
