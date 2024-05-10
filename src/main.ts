@@ -1,32 +1,432 @@
-import { Project, ProjectsApi } from "./api/projectsApi";
-import { Priority, Status, Story, StoriesApi } from "./api/storiesApi";
-import { User, Role, UsersApi } from "./api/usersApi";
-import { UserService } from "./userService";
+import { StoriesApi, Story } from "./api/storiesApi";
+import { Status, TasksApi, Task, Priority } from "./api/tasksApi";
+import { UsersApi, User, Role } from "./api/usersApi";
+import { ProjectsApi, Project } from "./api/projectsApi";
 
-const projectApi = new ProjectsApi();
+const tasksApi = new TasksApi();
 const storiesApi = new StoriesApi();
 const usersApi = new UsersApi();
-const project = new Project("Test project", "Description for new project");
-const userAdmin = new User("Szymon", "Kowalski", "Test password", Role.Admin);
-const userDevops = new User("Tadeusz", "Nowak", "Test password", Role.Devops);
-const userDev = new User("Kacper", "Testowy", "Test password", Role.Developer);
-const story = new Story(
-  "Add new feature",
-  "New feature desc",
-  Priority.High,
-  Status.ToDo,
-  project.uuid,
-  userDev.uuid
-);
+const projectsApi = new ProjectsApi();
 
-projectApi.create(project);
-usersApi.create(userAdmin);
-usersApi.create(userDevops);
-usersApi.create(userDev);
-storiesApi.create(story);
+const sampleProjectsData = [
+  new Project("Project 1", "Desc pro1", true),
+  new Project("Project 2", "Desc pro2"),
+];
 
-const allStories = storiesApi.getAll();
+sampleProjectsData.forEach((project) => {
+  projectsApi.create(project);
+});
 
-console.table(allStories);
+const exampleUsers = [
+  new User("John", "Doe", "password123", Role.Developer),
+  new User("Jane", "Smith", "password456", Role.Devops),
+  new User("Alice", "Johnson", "password789", Role.Admin),
+];
 
-UserService.loginUser(userAdmin);
+exampleUsers.forEach((user) => {
+  usersApi.create(user);
+});
+
+const exampleStories = [
+  new Story(
+    "Implement feature X",
+    "Description of feature X",
+    Priority.High,
+    Status.ToDo,
+    sampleProjectsData[0].uuid,
+    exampleUsers[0].uuid
+  ),
+  new Story(
+    "Fix bug Y",
+    "Description of bug Y",
+    Priority.Medium,
+    Status.Doing,
+    sampleProjectsData[0].uuid,
+    exampleUsers[0].uuid
+  ),
+  new Story(
+    "Refactor module Z",
+    "Description of module Z",
+    Priority.Low,
+    Status.Done,
+    sampleProjectsData[0].uuid,
+    exampleUsers[0].uuid
+  ),
+];
+
+exampleStories.forEach((story) => {
+  storiesApi.create(story);
+});
+
+async function renderTasks() {
+  const tasks = await tasksApi.getAll();
+  const stories = await storiesApi.getAll();
+  const users = await usersApi.getAll();
+
+  const todoTasks = tasks.filter((task) => task.status === Status.ToDo);
+  const doingTasks = tasks.filter((task) => task.status === Status.Doing);
+  const doneTasks = tasks.filter((task) => task.status === Status.Done);
+
+  renderTaskList(todoTasks, "todo-tasks");
+  renderTaskList(doingTasks, "doing-tasks");
+  renderTaskList(doneTasks, "done-tasks");
+
+  const storySelect = document.getElementById("storyUuid") as HTMLSelectElement;
+  stories.forEach((story) => {
+    const option = document.createElement("option");
+    option.value = story.uuid;
+    option.textContent = story.name;
+    storySelect.appendChild(option);
+  });
+
+  const userSelect = document.getElementById(
+    "assignedUserUuid"
+  ) as HTMLSelectElement;
+  users.forEach((user) => {
+    const option = document.createElement("option");
+    option.value = user.uuid;
+    option.textContent = `${user.name} ${user.surname}`;
+    userSelect.appendChild(option);
+  });
+}
+
+function renderTaskList(tasks: Task[], containerId: string) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  tasks.forEach((task) => {
+    const taskElement = document.createElement("div");
+    taskElement.classList.add("task");
+    taskElement.innerHTML = `
+      <h3>${task.name}</h3>
+      <p>${task.description}</p>
+      <button class="view-details-btn" data-task-id="${task.uuid}">View Details</button>`;
+    container.appendChild(taskElement);
+  });
+}
+
+document
+  .getElementById("add-task-btn")
+  ?.addEventListener("click", openTaskFormModal);
+document
+  .getElementById("task-form-modal")
+  ?.addEventListener("submit", handleTaskFormSubmit);
+document
+  .getElementById("todo-tasks")
+  ?.addEventListener("click", handleTaskAction);
+document
+  .getElementById("doing-tasks")
+  ?.addEventListener("click", handleTaskAction);
+document
+  .getElementById("done-tasks")
+  ?.addEventListener("click", handleTaskAction);
+
+async function openTaskFormModal() {
+  const modal = document.getElementById("task-form-modal");
+  if (!modal) return;
+
+  const form = modal.querySelector("#task-form") as HTMLFormElement;
+  form.reset();
+
+  const formTitle = modal.querySelector("#form-title");
+  if (formTitle) formTitle.textContent = "Add New Task";
+
+  modal.style.display = "block";
+
+  const closeButton = modal.querySelector(".close");
+  if (closeButton) {
+    closeButton.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  }
+}
+
+async function handleTaskFormSubmit(event: Event) {
+  event.preventDefault();
+
+  const form = event.target as HTMLFormElement;
+  const formData = new FormData(form);
+
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const priority = parseInt(formData.get("priority") as string);
+  const storyUuid = formData.get("storyUuid") as string;
+  const assignedUserUuid = formData.get("assignedUserUuid") as string;
+
+  // Ustaw datę startu na bieżący czas
+  const dateOfStart = new Date();
+  const dateOfFinish = null; // Ustaw datę końca na null
+  const status = Status.ToDo; // Ustaw status na "To Do"
+
+  const newTask = new Task(
+    name,
+    description,
+    priority,
+    storyUuid,
+    status,
+    dateOfStart,
+    dateOfFinish,
+    assignedUserUuid
+  );
+  tasksApi.create(newTask);
+
+  const modal = document.getElementById("task-form-modal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+  renderTasks();
+}
+
+async function handleTaskAction(event: Event) {
+  const target = event.target as HTMLElement;
+  const viewDetailsBtn = target.closest(".view-details-btn");
+  if (!viewDetailsBtn) return;
+
+  const taskId = viewDetailsBtn.getAttribute("data-task-id");
+  if (!taskId) return;
+
+  const task = tasksApi.get(taskId);
+  if (!task) return;
+
+  const modal = document.getElementById("task-details-modal");
+  if (!modal) return;
+
+  const modalContent = modal.querySelector(".modal-content");
+  if (!modalContent) return;
+
+  const story = storiesApi.get(task.storyUuid);
+  const user = usersApi.get(task.assignedUserUuid);
+
+  const taskDetails = `
+    <h3>${task.name}</h3>
+    <p><strong>Description:</strong> ${task.description}</p>
+    <p><strong>Priority:</strong> ${Priority[task.priority]}</p>
+    <p><strong>Status:</strong> ${Status[task.status]}</p>
+    <p><strong>Story:</strong> ${story ? story.name : "Unknown"}</p>
+    <p><strong>Assigned User:</strong> ${
+      user ? `${user.name} ${user.surname}` : "Unknown"
+    }</p>
+    <p><strong>Date of Start:</strong> ${
+      task.dateOfStart
+        ? new Date(task.dateOfStart).toDateString()
+        : "Not started"
+    }</p>
+    <p><strong>Date of Finish:</strong> ${
+      task.dateOfFinish
+        ? new Date(task.dateOfFinish).toDateString()
+        : "Not finished"
+    }</p>
+    <button id="edit-task-btn" data-task-id="${task.uuid}">Edit Task</button>
+    <button id="close-modal-btn">Close</button>
+  `;
+
+  modalContent.innerHTML = taskDetails;
+
+  modal.style.display = "block";
+
+  const closeBtn = modal.querySelector("#close-modal-btn");
+  closeBtn?.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  const editTaskBtn = modal.querySelector("#edit-task-btn");
+  editTaskBtn?.addEventListener("click", () => {
+    handleEditTask(taskId);
+  });
+}
+
+async function handleEditTask(taskId: string | null) {
+  if (!taskId) return;
+
+  const task = tasksApi.get(taskId);
+  if (!task) return;
+
+  const users = await usersApi.getAll();
+  const userMap: Record<string, string> = {};
+  users.forEach(
+    (user) => (userMap[user.uuid] = `${user.name} ${user.surname}`)
+  );
+
+  const stories = await storiesApi.getAll();
+  const storyMap: Record<string, string> = {};
+  stories.forEach((story) => (storyMap[story.uuid] = story.name));
+
+  // Pobierz formularz edycji zadania
+  const editForm = getEditTaskForm(task, userMap, storyMap);
+  const modalContent = document.querySelector(".modal-content");
+  if (!modalContent) return;
+
+  // Usuń istniejący widok szczegółowy zadania i dodaj formularz edycji
+  modalContent.innerHTML = editForm;
+
+  // Ustaw funkcję obsługi formularza
+  const form = document.getElementById("edit-task-form") as HTMLFormElement;
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    handleEditTaskFormSubmit(taskId);
+  });
+}
+
+document
+  .getElementById("task-details-modal")
+  ?.addEventListener("click", async (event) => {
+    const target = event.target as HTMLElement;
+    if (target.id !== "edit-task-btn") return;
+
+    const taskId = target.getAttribute("data-task-id");
+    if (!taskId) return;
+
+    const task = tasksApi.get(taskId);
+    if (!task) return;
+
+    const users = await usersApi.getAll();
+    const userMap: Record<string, string> = {};
+    users.forEach(
+      (user) => (userMap[user.uuid] = `${user.name} ${user.surname}`)
+    );
+
+    const stories = await storiesApi.getAll();
+    const storyMap: Record<string, string> = {};
+    stories.forEach((story) => (storyMap[story.uuid] = story.name));
+
+    // Pobierz formularz edycji zadania
+    const editForm = getEditTaskForm(task, userMap, storyMap);
+    const modalContent = document.querySelector(".modal-content");
+    if (!modalContent) return;
+
+    // Usuń istniejący widok szczegółowy zadania i dodaj formularz edycji
+    modalContent.innerHTML = editForm;
+
+    // Ustaw funkcję obsługi formularza
+    const form = document.getElementById("edit-task-form") as HTMLFormElement;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      handleEditTaskFormSubmit(taskId);
+    });
+  });
+
+function getEditTaskForm(
+  task: Task,
+  users: Record<string, string>,
+  stories: Record<string, string>
+): string {
+  // Zwróć formularz edycji zadania w formie HTML
+  return `
+      <h2>Edit Task</h2>
+      <form id="edit-task-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="${
+          task.name
+        }" required />
+  
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required>${
+          task.description
+        }</textarea>
+  
+        <label for="priority">Priority:</label>
+        <select id="priority" name="priority" required>
+          <option value="0" ${
+            task.priority === Priority.Low ? "selected" : ""
+          }>Low</option>
+          <option value="1" ${
+            task.priority === Priority.Medium ? "selected" : ""
+          }>Medium</option>
+          <option value="2" ${
+            task.priority === Priority.High ? "selected" : ""
+          }>High</option>
+        </select>
+  
+        <label for="storyUuid">Story:</label>
+        <select id="storyUuid" name="storyUuid" required>
+          ${Object.entries(stories)
+            .map(
+              ([uuid, name]) => `
+            <option value="${uuid}" ${
+                uuid === task.storyUuid ? "selected" : ""
+              }>${name}</option>
+          `
+            )
+            .join("")}
+        </select>
+  
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+          <option value="0" ${
+            task.status === Status.ToDo ? "selected" : ""
+          }>To Do</option>
+          <option value="1" ${
+            task.status === Status.Doing ? "selected" : ""
+          }>Doing</option>
+          <option value="2" ${
+            task.status === Status.Done ? "selected" : ""
+          }>Done</option>
+        </select>
+  
+        <label for="assignedUserUuid">Assigned User:</label>
+        <select id="assignedUserUuid" name="assignedUserUuid" required>
+          ${Object.entries(users)
+            .map(
+              ([uuid, name]) => `
+            <option value="${uuid}" ${
+                uuid === task.assignedUserUuid ? "selected" : ""
+              }>${name}</option>
+          `
+            )
+            .join("")}
+        </select>
+  
+        <button type="submit">Save</button>
+      </form>
+    `;
+}
+
+async function handleEditTaskFormSubmit(taskId: string | null) {
+  if (!taskId) return;
+
+  const task = tasksApi.get(taskId);
+  if (!task) return;
+
+  const form = document.getElementById("edit-task-form") as HTMLFormElement;
+  const formData = new FormData(form);
+
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const priority = parseInt(formData.get("priority") as string);
+  const storyUuid = formData.get("storyUuid") as string;
+  const status = parseInt(formData.get("status") as string);
+  const assignedUserUuid = formData.get("assignedUserUuid") as string;
+
+  // Aktualizacja wszystkich informacji o zadaniu
+  task.name = name;
+  task.description = description;
+  task.priority = priority;
+  task.storyUuid = storyUuid;
+  task.status = status;
+  task.assignedUserUuid = assignedUserUuid;
+
+  // Jeżeli status zostanie zmieniony na "Doing", ustaw datę startu na bieżący czas
+  if (task.status === Status.Doing) {
+    task.dateOfStart = new Date();
+  }
+
+  // Jeżeli status zostanie zmieniony na "Done", ustaw datę zakończenia na bieżący czas
+  if (task.status === Status.Done) {
+    task.dateOfFinish = new Date();
+  }
+
+  tasksApi.update(task);
+
+  renderTasks();
+
+  const modal = document.getElementById("task-details-modal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderTasks();
+});

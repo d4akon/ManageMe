@@ -8,8 +8,8 @@ export class Task {
   public storyUuid: string;
   public status: Status;
   public readonly dateOfCreation: Date;
-  public readonly dateOfStart: Date | null;
-  public readonly dateOfFinish: Date | null;
+  public dateOfStart: Date | null;
+  public dateOfFinish: Date | null;
   public assignedUserUuid: string;
 
   constructor(
@@ -18,8 +18,8 @@ export class Task {
     priority: Priority,
     storyUuid: string,
     status: Status,
-    dateOfStart: Date,
-    dateOfFinish: Date,
+    dateOfStart: Date | null,
+    dateOfFinish: Date | null,
     assignedUserUuid: string
   ) {
     this.uuid = crypto.randomUUID();

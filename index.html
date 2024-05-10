@@ -1,14 +1,77 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="src/style.css">
-    <title>Vite + TS</title>
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="src/style.css" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <h1>Kanban Board</h1>
+
+    <div class="kanban-column">
+      <h2>ToDo</h2>
+      <div id="todo-tasks" class="task-list"></div>
+    </div>
+
+    <div class="kanban-column">
+      <h2>Doing</h2>
+      <div id="doing-tasks" class="task-list"></div>
+    </div>
+
+    <div class="kanban-column">
+      <h2>Done</h2>
+      <div id="done-tasks" class="task-list"></div>
+    </div>
+
+    <button id="add-task-btn">Add New Task</button>
+
+    <div id="task-details-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Task Details</h2>
+        <div id="task-details"></div>
+      </div>
+    </div>
+
+    <div id="task-form-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="form-title">Add New Task</h2>
+        <form id="task-form">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required />
+
+          <label for="description">Description:</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            required
+          ></textarea>
+
+          <label for="priority">Priority:</label>
+          <select id="priority" name="priority" required>
+            <option value="0">Low</option>
+            <option value="1">Medium</option>
+            <option value="2">High</option>
+          </select>
+
+          <label for="storyUuid">Story:</label>
+          <select id="storyUuid" name="storyUuid" required></select>
+
+          <label for="assignedUserUuid">Assigned User:</label>
+          <select
+            id="assignedUserUuid"
+            name="assignedUserUuid"
+            required
+          ></select>
+
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="src/main.ts" type="module"></script>
   </body>
 </html>
